@@ -23,7 +23,22 @@ app.get("/", (_, res) => {
   res.sendFile(join(__dirname, "index.html"));
 });
 
+
 app.use("/auth", authRoutes);
 app.use("/seats", seatRoutes);
+
+app.get("/seed", async (req, res) => {
+  try {
+    await pool.query(`
+      INSERT INTO seats (isbooked)
+      SELECT 0 FROM generate_series(1, 20)
+    `);
+
+    res.send("Seeded 20 seats");
+  } catch (err) {
+    console.error(err);
+    res.send("Error seeding");
+  }
+});
 
 app.listen(port, () => console.log(`Server running on port: ${port}`));
