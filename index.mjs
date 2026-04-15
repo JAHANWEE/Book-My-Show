@@ -6,6 +6,7 @@ import { fileURLToPath } from "url";
 
 import authRoutes from "./routes/auth.js";
 import seatRoutes from "./routes/seats.js";
+import pool from "./db/pool.js";
 
 dotenv.config();
 
@@ -27,17 +28,37 @@ app.get("/", (_, res) => {
 app.use("/auth", authRoutes);
 app.use("/seats", seatRoutes);
 
-app.get("/seed", async (req, res) => {
+app.get("/seed", async (_, res) => {
   try {
     await pool.query(`
-      INSERT INTO seats (isbooked)
-      SELECT 0 FROM generate_series(1, 20)
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        email TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL
+      )
     `);
 
-    res.send("Seeded 20 seats");
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS seats (
+        id SERIAL PRIMARY KEY,
+        isbooked INTEGER DEFAULT 0,
+        name TEXT
+      )
+    `);
+
+    // Only insert if table is empty
+    const { rowCount } = await pool.query("SELECT 1 FROM seats LIMIT 1");
+    if (rowCount === 0) {
+      await pool.query(`
+        INSERT INTO seats (isbooked)
+        SELECT 0 FROM generate_series(1, 20)
+      `);
+    }
+
+    res.send("Seeded successfully.");
   } catch (err) {
     console.error(err);
-    res.send("Error seeding");
+    res.status(500).send("Error seeding: " + err.message);
   }
 });
 
