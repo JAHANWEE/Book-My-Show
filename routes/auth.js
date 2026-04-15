@@ -1,18 +1,31 @@
 import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { z } from "zod";
 import pool from "../db/pool.js";
+
+const registerSchema = z.object({
+  email: z.string().email("Invalid email address."),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters.")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter.")
+    .regex(/[0-9]/, "Password must contain at least one number.")
+    .regex(/[^a-zA-Z0-9]/, "Password must contain at least one special character."),
+});
 
 const router = express.Router();
 
 // POST /auth/register
 router.post("/register", async (req, res) => {
   try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ error: "Email and password are required." });
+    const parsed = registerSchema.safeParse(req.body);
+    if (!parsed.success) {
+      const messages = parsed.error.issues.map((e) => e.message);
+      return res.status(400).json({ error: messages.join(" ") });
     }
+
+    const { email, password } = parsed.data;
 
     const existing = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
     if (existing.rowCount > 0) {
@@ -36,8 +49,8 @@ router.post("/register", async (req, res) => {
 
     res.status(201).json({ message: "Registered successfully.", token });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Internal server error." });
+    console.error("REGISTER ERROR:", err);
+    res.status(500).json({ error: err.message || "Internal server error." });
   }
 });
 
