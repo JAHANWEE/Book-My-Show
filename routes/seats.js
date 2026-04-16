@@ -6,14 +6,23 @@ const router = express.Router();
 
 // GET /seats — public, no auth required
 router.get("/", async (req, res) => {
-  const result = await pool.query("SELECT * FROM seats");
-  res.send(result.rows);
+  try {
+    const result = await pool.query("SELECT * FROM seats");
+    res.send(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch seats." });
+  }
 });
 
 // PUT /seats/:id/:name — protected, requires valid JWT
 router.put("/:id/:name", verifyToken, async (req, res) => {
   try {
     const { id, name } = req.params;
+
+    if (!name || name.trim().length === 0 || name.length > 50) {
+      return res.status(400).json({ error: "Invalid name. Must be 1-50 characters." });
+    }
 
     const conn = await pool.connect();
     await conn.query("BEGIN");

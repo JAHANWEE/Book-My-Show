@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import rateLimit from "express-rate-limit";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
@@ -23,7 +24,16 @@ app.get("/", (_, res) => {
   res.sendFile(join(__dirname, "index.html"));
 });
 
-app.use("/auth", authRoutes);
+// Rate limit auth routes — max 10 requests per 15 minutes per IP
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: "Too many requests. Please try again later." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use("/auth", authLimiter, authRoutes);
 app.use("/seats", seatRoutes);
 app.use("/seed", seedRoutes);
 
