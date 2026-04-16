@@ -4,101 +4,84 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TicketBaazi</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap");
-      body {
-        font-family: "Outfit", sans-serif;
-        background-color: #0f172a;
-        color: #f8fafc;
-      }
-    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Bebas+Neue&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./src/style.css" />
   </head>
-  <body
-    class="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
-  >
-
-  <!-- Auth Modal -->
-  <div id="auth-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-    <div class="bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl p-8 w-full max-w-sm relative">
-      <button id="modal-close" class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl">✕</button>
-
-      <!-- Tabs -->
-      <div class="flex mb-6 bg-slate-900 rounded-xl p-1">
-        <button id="tab-login" class="flex-1 py-2 rounded-lg text-sm font-semibold transition-all bg-emerald-500 text-white">Login</button>
-        <button id="tab-register" class="flex-1 py-2 rounded-lg text-sm font-semibold transition-all text-slate-400 hover:text-white">Register</button>
+  <body>
+    <!-- Navbar -->
+    <nav class="navbar">
+      <div class="nav-inner">
+        <button id="nav-logo" class="logo">🎬 TicketBaazi</button>
+        <div id="user-bar">
+          <div id="user-logged-in" class="user-info hidden">
+            <span>Hi, <strong id="user-email"></strong></span>
+            <button id="my-bookings-btn" class="btn-ghost">🎟 My Bookings</button>
+            <button id="logout-btn" class="btn-ghost">Logout</button>
+          </div>
+          <button id="open-login-btn" class="btn-primary hidden">Sign In</button>
+        </div>
       </div>
+    </nav>
 
-      <p id="auth-error" class="hidden text-rose-400 text-sm mb-4 text-center"></p>
-
-      <input id="auth-email" type="email" placeholder="Email"
-        class="w-full mb-3 px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500" />
-      <input id="auth-password" type="password" placeholder="Password"
-        class="w-full mb-5 px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500" />
-
-      <button id="auth-submit"
-        class="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold transition-all">
-        Login
-      </button>
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="modal-overlay hidden">
+      <div class="modal-box">
+        <button id="modal-close" class="modal-close">✕</button>
+        <div class="modal-tabs">
+          <button id="tab-login" class="tab active">Login</button>
+          <button id="tab-register" class="tab">Register</button>
+        </div>
+        <p id="auth-error" class="auth-error hidden"></p>
+        <input id="auth-email" type="email" placeholder="Email" class="input" />
+        <input id="auth-password" type="password" placeholder="Password" class="input" />
+        <button id="auth-submit" class="btn-primary full">Login</button>
+        <div class="divider"><span>or</span></div>
+        <button id="guest-btn" class="btn-ghost full">👤 Continue as Guest</button>
+        <p class="hint">Guest: <code>guest@ticketbaazi.com</code> / <code>Guest@1234</code></p>
+      </div>
     </div>
-  </div>
-    <div
-      class="max-w-7xl w-full bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-2xl p-10 border border-slate-700/50"
-    >
-      <div class="text-center mb-10">
-        <!-- User status bar -->
-        <div id="user-bar" class="flex justify-end mb-4 min-h-[28px]">
-          <div id="user-logged-in" class="hidden items-center gap-3 text-sm">
-            <span class="text-slate-400">Logged in as <span id="user-email" class="text-emerald-400 font-semibold"></span></span>
-            <button id="logout-btn" class="px-3 py-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs transition-all">Logout</button>
-          </div>
-          <button id="open-login-btn" class="hidden px-4 py-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm transition-all">Login</button>
-        </div>
-        <h1
-          class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 mb-4 tracking-tight"
-        >
-          TicketBaazi<br />
-          <br />
-          <span class="text-red-400">
-            <span class="font-bold">Dhurandhar The Revenge</span>
-          </span>
-        </h1>
-        <p class="text-slate-400 text-lg">Jassi ko ghar ki yaad kyu nhi aai?</p>
-      </div>
 
-      <div class="flex justify-center mb-10">
-        <div
-          class="bg-slate-900/50 rounded-full px-6 py-3 border border-slate-700 flex gap-8 items-center"
-        >
-          <div class="flex items-center gap-3">
-            <div
-              class="w-4 h-4 rounded-full bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.6)]"
-            ></div>
-            <span class="text-slate-300 font-medium tracking-wide"
-              >Available</span
-            >
-          </div>
-          <div class="w-px h-6 bg-slate-700"></div>
-          <div class="flex items-center gap-3">
-            <div
-              class="w-4 h-4 rounded-full bg-rose-500/20 border border-rose-500/50"
-            ></div>
-            <span class="text-slate-400 font-medium tracking-wide">Booked</span>
-          </div>
+    <!-- Name Dialog -->
+    <div id="name-dialog" class="modal-overlay hidden">
+      <div class="modal-box" style="max-width:420px">
+        <button id="name-dialog-close" class="modal-close">✕</button>
+        <div style="margin-bottom:20px">
+          <div class="modal-title">Who's coming? 🎬</div>
+          <div class="modal-sub" id="name-dialog-sub"></div>
         </div>
+        <div id="name-fields"></div>
+        <button id="name-dialog-confirm" class="btn-primary full" style="margin-top:8px">Confirm Booking</button>
       </div>
+    </div>
 
-      <div class="flex justify-center">
-        <div
-          class="bg-slate-900/40 p-8 rounded-2xl border border-slate-700/50 shadow-inner"
-        >
-          <table
-            id="tbl"
-            class="border-separate border-spacing-4 mx-auto"
-          ></table>
+    <!-- Pages -->
+    <div id="page-movies"></div>
+    <div id="page-seats" class="hidden"></div>
+    <div id="page-bookings" class="hidden"></div>
+
+    <!-- Booking Ticket Overlay -->
+    <div id="ticket-overlay" class="ticket-overlay hidden">
+      <div class="ticket">
+        <div class="ticket-header">
+          <span class="ticket-icon">🎟️</span>
+          <h3 id="ticket-movie"></h3>
+          <button id="ticket-close" class="ticket-close">✕</button>
+        </div>
+        <div class="ticket-body">
+          <div class="ticket-row"><span>Show</span><strong id="ticket-time"></strong></div>
+          <div class="ticket-row"><span>Seats</span><strong id="ticket-seats"></strong></div>
+          <div class="ticket-row"><span>Name</span><strong id="ticket-name"></strong></div>
+          <div class="ticket-row"><span>Amount</span><strong id="ticket-amount"></strong></div>
+        </div>
+        <div class="ticket-footer">
+          <div class="ticket-barcode">||||| |||| ||| ||||| ||||</div>
+          <p class="ticket-enjoy">Enjoy the show! 🍿</p>
         </div>
       </div>
     </div>
-<script src="./src/script.js"></script>
+
+    <script src="./src/script.js"></script>
   </body>
 </html>
