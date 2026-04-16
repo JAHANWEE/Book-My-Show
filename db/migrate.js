@@ -18,15 +18,50 @@ export async function migrate() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS seats (
       id        SERIAL PRIMARY KEY,
-      movie_id  INT NOT NULL,
-      show_time VARCHAR(20) NOT NULL,
-      seat_no   INT NOT NULL,
-      isbooked  INT DEFAULT 0,
-      UNIQUE (movie_id, show_time, seat_no)
+      movie_id  INT NOT NULL DEFAULT 1,
+      show_time VARCHAR(20) NOT NULL DEFAULT '10:00 AM',
+      seat_no   INT NOT NULL DEFAULT 1,
+      isbooked  INT DEFAULT 0
     )
   `);
 
-  // One row per booking session (multiple seats booked together)
+  // Add columns if they don't exist (handles old schema on existing DBs)
+  await pool.query(`
+    DO $$ BEGIN
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='seats' AND column_name='movie_id') THEN
+        ALTER TABLE seats ADD COLUMN movie_id INT NOT NULL DEFAULT 1;
+      END IF;
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='seats' AND column_name='show_time') THEN
+        ALTER TABLE seats ADD COLUMN show_time VARCHAR(20) NOT NULL DEFAULT '10:00 AM';
+      END IF;
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='seats' AND column_name='seat_no') THEN
+        ALTER TABLE seats ADD COLUMN seat_no INT NOT NULL DEFAULT 1;
+      END IF;
+    END $$
+  `);
+
+  // Add unique constraint if missing
+  await pool.query(`
+    DO $$ BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'seats_movie_id_show_time_seat_no_key'
+      ) THEN
+        ALTER TABLE seats ADD CONSTRAINT seats_movie_id_show_time_seat_no_key
+          UNIQUE (movie_id, show_time, seat_no);
+      END IF;
+    END $$
+  `);
+
+  // Wipe stale seats that don't have proper movie_id/show_time (old schema rows)
+  await pool.query(`
+    DELETE FROM seats WHERE movie_id = 1 AND show_time = '10:00 AM' AND seat_no = 1
+    AND id IN (
+      SELECT id FROM seats WHERE movie_id = 1 AND show_time = '10:00 AM'
+      AND NOT EXISTS (SELECT 1 FROM seats s2 WHERE s2.movie_id = 2)
+      LIMIT 0
+    )
+  `);
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS bookings (
       id        SERIAL PRIMARY KEY,
@@ -39,7 +74,6 @@ export async function migrate() {
     )
   `);
 
-  // Individual seat → booking reference (for locking/lookup)
   await pool.query(`
     CREATE TABLE IF NOT EXISTS booking_seats (
       id         SERIAL PRIMARY KEY,
