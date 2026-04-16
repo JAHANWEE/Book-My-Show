@@ -1,0 +1,5 @@
+built a BookMyShow clone over the weekend
+
+JWT auth, seat locking, animated ticket UI, 9 movies, 100 seats per show — fully deployed
+
+#buildinpublic #nodejs #javascript
