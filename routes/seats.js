@@ -39,6 +39,8 @@ router.put("/:id/:name", verifyToken, async (req, res) => {
 
     res.json({ message: "Seat booked successfully.", bookedBy: req.user.email });
   } catch (ex) {
+    await conn.query("ROLLBACK").catch(() => {});
+    conn.release();
     console.error(ex);
     res.status(500).json({ error: "Internal server error." });
   }

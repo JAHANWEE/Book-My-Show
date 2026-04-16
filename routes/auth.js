@@ -14,6 +14,11 @@ const registerSchema = z.object({
     .regex(/[^a-zA-Z0-9]/, "Password must contain at least one special character."),
 });
 
+const loginSchema = z.object({
+  email: z.string().email("Invalid email address."),
+  password: z.string().min(1, "Password is required."),
+});
+
 const router = express.Router();
 
 // POST /auth/register
@@ -57,11 +62,13 @@ router.post("/register", async (req, res) => {
 // POST /auth/login
 router.post("/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ error: "Email and password are required." });
+    const parsed = loginSchema.safeParse(req.body);
+    if (!parsed.success) {
+      const messages = parsed.error.issues.map((e) => e.message);
+      return res.status(400).json({ error: messages.join(" ") });
     }
+
+    const { email, password } = parsed.data;
 
     const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
     if (result.rowCount === 0) {
